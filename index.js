@@ -6,7 +6,7 @@ let port = process.env.PORT || 3000;
 let rooms = [
     {
         "type": "Deluxe Room",
-        "price": 120.3,
+        "price": 110.3,
         "frequency": "per night",
         // "discountPrice": "1",
         "image": "./hotel_3.jpg"
