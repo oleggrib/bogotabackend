@@ -1,7 +1,9 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const fetch = require('node-fetch');
 const app = express();
 let port = process.env.PORT || 3000;
+let bearer = "AAAAAAAAAAAAAAAAAAAAAMGxPQEAAAAAn2J6b%2BvyI8t8qKryhfZUisZE94Q%3DcfOS71mRCVynHctv4q910Emh4Ezh0409XQHgjZ4UwDDciQhJ78";
 
 let rooms = [
     {
@@ -92,6 +94,38 @@ app.use(bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
+
+app.get('/twitter/', async (request, response) => {
+
+    try {
+        if (!request.query || !request.query.name || !request.query.name.length){
+            throw new Error("please dont forget to send username");
+        }
+
+        let re = /^[a-zA-Z0-9_]{4,15}$/;
+        let regTest = re.test(String(request.query.name));
+
+        if (!regTest){
+            throw new Error("wrong username");
+        }
+
+        // console.log(request.query);
+
+    
+        let raw = await fetch('https://api.twitter.com/2/users/by/username/' + request.query.name + '?user.fields=id,name,description,profile_image_url,url,username',
+        {
+            headers: { 'authorization': 'Bearer ' + bearer },
+        });
+        let json = await raw.json();
+
+        // console.log(json);
+
+        response.json( json );
+    } catch(err) {
+        // console.log(err);
+        response.json( {res: "request failed. "+err} );
+    }
+});
 
 app.get('/', (request, response) => {
 // response.send('Service works with POST only.');
