@@ -2,6 +2,8 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const fetch = require('node-fetch');
 const app = express();
+const {draw, getIPFSFile} = require('./src/render_svg');
+
 let port = process.env.PORT || 3000;
 let bearer = "AAAAAAAAAAAAAAAAAAAAAMGxPQEAAAAAn2J6b%2BvyI8t8qKryhfZUisZE94Q%3DcfOS71mRCVynHctv4q910Emh4Ezh0409XQHgjZ4UwDDciQhJ78";
 
@@ -94,6 +96,125 @@ app.use(bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
+
+app.get('/svgipfs/', async (request, response) => {
+    try {
+        {
+            // test GET param contract
+            if (!request.query || !request.query.ipfshash || !request.query.ipfshash.length){
+                throw new Error("correct ipfshash required");
+            }
+
+            let ipfshashRe = /^[a-zA-Z0-9]{46}$/;
+            let ipfshashTest = ipfshashRe.test(String(request.query.ipfshash));
+
+            if (!ipfshashTest){
+                throw new Error("wrong ipfshash");
+            }
+        }
+
+        {
+            // test GET param autograph
+            if (!request.query || !request.query.autograph || !request.query.autograph.length){
+                throw new Error("correct autograph required");
+            }
+        }
+
+        let ipfsFileBuf = await getIPFSFile(request.query.ipfshash);
+
+        let svg = await draw(ipfsFileBuf, request.query.autograph);
+        // console.log(svg);
+
+        // res.contentType('text/plain');
+        // res.send('This is the content', { 'Content-Disposition': 'attachment; filename=name.txt' });
+
+        // Express 4:
+        response.status(200)
+            .attachment(`autograph.svg`)
+            .send(svg);
+
+        // console.log(json);
+
+        // response.json( json );
+    } catch(err) {
+        // console.log(err);
+        response.json( {res: "request failed. "+err} );
+    }
+})
+
+app.get('/svg/', async (request, response) => {
+    try {
+        {
+            // test GET param contract
+            if (!request.query || !request.query.contract || !request.query.contract.length){
+                throw new Error("correct contract required");
+            }
+
+            let contractRe = /^0x[a-zA-Z0-9]{40}$/;
+            let contractTest = re.test(String(request.query.name));
+
+            if (!contractTest){
+                throw new Error("wrong contract");
+            }
+        }
+
+        {
+            // test GET param tokenId
+            if (!request.query || !request.query.tokenId || !request.query.tokenId.length){
+                throw new Error("correct tokenId required");
+            }
+
+            let tokenIdRe = /^[a-zA-Z0-9_]+$/;
+            let tokenIdTest = re.test(String(request.query.name));
+
+            if (!tokenIdTest){
+                throw new Error("wrong tokenId format");
+            }
+        }
+
+        {
+            // test GET param autograph
+            if (!request.query || !request.query.autograph || !request.query.autograph.length){
+                throw new Error("correct autograph required");
+            }
+        }
+
+        // console.log(request.query);
+
+
+
+        // let buffer; //uint8array/Buffer
+        // detect.fromBuffer(buffer, function(err, result) {
+        //
+        //     if (err) {
+        //         return console.log(err);
+        //     }
+        //
+        //     console.log(result); // { ext: 'jpg', mime: 'image/jpeg' }
+        // });
+
+        // console.log(sizeOf(buffer))
+
+        // <svg id="example1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        //     <image x="0" y="0" width="5" height="5" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="/>
+        // </svg>
+
+        // res.contentType('text/plain');
+        // res.send('This is the content', { 'Content-Disposition': 'attachment; filename=name.txt' });
+
+        // Express 4:
+        // res.status(200)
+        //     .attachment(`name.txt`)
+        //     .send('This is the content')
+
+        // console.log(json);
+
+        response.json( json );
+    } catch(err) {
+        // console.log(err);
+        response.json( {res: "request failed. "+err} );
+    }
+})
 
 app.get('/twitter/', async (request, response) => {
 
