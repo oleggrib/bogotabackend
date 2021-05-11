@@ -131,7 +131,13 @@ const getIPFSFile = async function(ipfshash){
     let fileContentBuffer = Buffer.from([]);
     try {
         // const ipfs = createIPFS({path: '/ip4/127.0.0.1/tcp/4001'});
-        const ipfs = createIPFS.create({ timeout: 50000 });
+        const ipfs = createIPFS.create({
+                timeout: 50000,
+                // host: 'gateway.ipfs.io',
+                host: 'dweb.link',
+                port: 443,
+                protocol: 'https'
+            });
 
         // const res = await ipfs.get('QmYupw6pgYZ6Ntb64E1Mps2vEUCQZddr3S2BT85iPGd2Ap');
         // const res = await ipfs.get('QmYupw6pgYZ6Ntb64E1Mps2vEUCQZddr3S2BT85iPGd2Ar');
