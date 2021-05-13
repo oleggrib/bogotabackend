@@ -189,6 +189,7 @@ app.get('/svg/', async (request, response) => {
 
         let tokenMetaObj;
         try {
+            console.log('request tokenMetaObj');
             tokenMetaObj = await contract.callStatic.tokenURI(tokenId);
             // console.log(tokenMetaObj);
         } catch(e){
@@ -201,8 +202,10 @@ app.get('/svg/', async (request, response) => {
         let dataJson = await responce.json();
 
         if (dataJson && dataJson.image){
+            console.log('request file');
             let responce = await fetch(dataJson.image);
             let imageData = await responce.buffer();
+            console.log('draw svg');
             let svg = await draw(imageData, autograph);
 
             response.status(200)
