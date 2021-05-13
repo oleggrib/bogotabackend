@@ -19,7 +19,7 @@ const draw = async function(fileContentBuffer, textToRender){
 
     try {
         let fileType = await FileType.fromBuffer(fileContentBuffer);
-        console.log(fileType);
+        // console.log(fileType);
 
         if (fileType === undefined ) {
             throw new Error('its not binary file, possibly text file');
@@ -59,9 +59,7 @@ const draw = async function(fileContentBuffer, textToRender){
         radius = Math.round(Math.min(
             imageWidth * percent / 100, imageHeight * percent / 100));
 
-        // let ratio = Math.min(imageWidth / canvasW, imageHeight / canvasH);
-        // embeddedImage = '<image x="0" y="0" width="' + Math.round(imageWidth / ratio) + '" height="' + Math.round(imageHeight / ratio) + '" xlink:href="data:' + fileType.mime + ';base64,' + base64 + '"/>';
-        embeddedImage = '<image x="0" y="0" width="' + imageWidth + '" height="' + imageHeight + '" xlink:href="data:' + fileType.mime + ';base64,' + base64 + '"/>';
+       embeddedImage = '<image x="0" y="0" width="' + imageWidth + '" height="' + imageHeight + '" xlink:href="data:' + fileType.mime + ';base64,' + base64 + '"/>';
 
     } catch (e){
         console.log(e);

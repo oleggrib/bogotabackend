@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const fetch = require('node-fetch');
 const app = express();
 const {draw, getIPFSFile} = require('./src/render_svg');
+const {ethers} = require("ethers");
 
 let port = process.env.PORT || 3000;
 let bearer = "AAAAAAAAAAAAAAAAAAAAAMGxPQEAAAAAn2J6b%2BvyI8t8qKryhfZUisZE94Q%3DcfOS71mRCVynHctv4q910Emh4Ezh0409XQHgjZ4UwDDciQhJ78";
@@ -123,10 +124,7 @@ app.get('/svgipfs/', async (request, response) => {
         let ipfsFileBuf = await getIPFSFile(request.query.ipfshash);
 
         let svg = await draw(ipfsFileBuf, request.query.autograph);
-        // console.log(svg);
 
-        // res.contentType('text/plain');
-        // res.send('This is the content', { 'Content-Disposition': 'attachment; filename=name.txt' });
 
         // Express 4:
         response.status(200)
@@ -143,6 +141,9 @@ app.get('/svgipfs/', async (request, response) => {
 })
 
 app.get('/svg/', async (request, response) => {
+    let contractAddress = '',
+        tokenId = '',
+        autograph = '';
     try {
         {
             // test GET param contract
@@ -150,10 +151,9 @@ app.get('/svg/', async (request, response) => {
                 throw new Error("correct contract required");
             }
 
-            let contractRe = /^0x[a-zA-Z0-9]{40}$/;
-            let contractTest = re.test(String(request.query.name));
+            contractAddress = request.query.contract;
 
-            if (!contractTest){
+            if (!/^0x[a-zA-Z0-9]{40}$/.test(String(contractAddress))){
                 throw new Error("wrong contract");
             }
         }
@@ -164,10 +164,9 @@ app.get('/svg/', async (request, response) => {
                 throw new Error("correct tokenId required");
             }
 
-            let tokenIdRe = /^[a-zA-Z0-9_]+$/;
-            let tokenIdTest = re.test(String(request.query.name));
+            tokenId = request.query.tokenId;
 
-            if (!tokenIdTest){
+            if (!/^[a-zA-Z0-9_]+$/.test(String(tokenId))){
                 throw new Error("wrong tokenId format");
             }
         }
@@ -177,39 +176,43 @@ app.get('/svg/', async (request, response) => {
             if (!request.query || !request.query.autograph || !request.query.autograph.length){
                 throw new Error("correct autograph required");
             }
+            autograph = request.query.autograph;
         }
 
-        // console.log(request.query);
+
+        let provider = new ethers.providers.InfuraProvider("rinkeby", "a3babf9f8bf64e5ca6b4caa070169744");
+        let tokenUriAbi = '[{"constant": true,"inputs":[{"name":"_tokenId","type":"uint256"}],"name":"tokenURI","outputs": [{"name": "url", "type": "string"}],"payable": false,"stateMutability": "view","type": "function"}]';
+
+        // let stormbirdSART = "0xa567f5A165545Fa2639bBdA79991F105EADF8522";
+        // let tokenID = "284";
+        let contract = new ethers.Contract( contractAddress , tokenUriAbi , provider );
+
+        let tokenMetaObj;
+        try {
+            tokenMetaObj = await contract.callStatic.tokenURI(tokenId);
+            // console.log(tokenMetaObj);
+        } catch(e){
+            console.log(e);
+            throw new Error(`cant fetch tokenURI for contract "${contractAddress}" and tokenID "${tokenId}"`);
+        }
 
 
+        let responce = await fetch(tokenMetaObj);
+        let dataJson = await responce.json();
 
-        // let buffer; //uint8array/Buffer
-        // detect.fromBuffer(buffer, function(err, result) {
-        //
-        //     if (err) {
-        //         return console.log(err);
-        //     }
-        //
-        //     console.log(result); // { ext: 'jpg', mime: 'image/jpeg' }
-        // });
+        if (dataJson && dataJson.image){
+            let responce = await fetch(dataJson.image);
+            let imageData = await responce.buffer();
+            let svg = await draw(imageData, autograph);
 
-        // console.log(sizeOf(buffer))
+            response.status(200)
+                .attachment(`autograph.svg`)
+                .send(svg);
 
-        // <svg id="example1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        //     <image x="0" y="0" width="5" height="5" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="/>
-        // </svg>
+        } else {
+            response.json( {res: "cant generate image."} );
+        }
 
-        // res.contentType('text/plain');
-        // res.send('This is the content', { 'Content-Disposition': 'attachment; filename=name.txt' });
-
-        // Express 4:
-        // res.status(200)
-        //     .attachment(`name.txt`)
-        //     .send('This is the content')
-
-        // console.log(json);
-
-        response.json( json );
     } catch(err) {
         // console.log(err);
         response.json( {res: "request failed. "+err} );
