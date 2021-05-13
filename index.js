@@ -191,7 +191,7 @@ app.get('/svg/', async (request, response) => {
         try {
             console.log('request tokenMetaObj');
             tokenMetaObj = await contract.callStatic.tokenURI(tokenId);
-            // console.log(tokenMetaObj);
+            console.log(tokenMetaObj);
         } catch(e){
             console.log(e);
             throw new Error(`cant fetch tokenURI for contract "${contractAddress}" and tokenID "${tokenId}"`);
