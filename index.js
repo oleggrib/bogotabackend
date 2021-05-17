@@ -4,9 +4,11 @@ const fetch = require('node-fetch');
 const app = express();
 const {draw, getIPFSFile} = require('./src/render_svg');
 const {ethers} = require("ethers");
+const {db, getTwitterUsers} = require("./src/twitter");
 
 let port = process.env.PORT || 3000;
-let bearer = "AAAAAAAAAAAAAAAAAAAAAMGxPQEAAAAAn2J6b%2BvyI8t8qKryhfZUisZE94Q%3DcfOS71mRCVynHctv4q910Emh4Ezh0409XQHgjZ4UwDDciQhJ78";
+// let bearer = "AAAAAAAAAAAAAAAAAAAAAMGxPQEAAAAAn2J6b%2BvyI8t8qKryhfZUisZE94Q%3DcfOS71mRCVynHctv4q910Emh4Ezh0409XQHgjZ4UwDDciQhJ78";
+
 
 let rooms = [
     {
@@ -224,30 +226,44 @@ app.get('/svg/', async (request, response) => {
 
 app.get('/twitter/', async (request, response) => {
 
+    let time = Date.now();
+
+    let name;
+
+
     try {
         if (!request.query || !request.query.name || !request.query.name.length){
             throw new Error("please dont forget to send username");
         }
+        name = request.query.name;
 
-        let re = /^[a-zA-Z0-9_]{4,15}$/;
-        let regTest = re.test(String(request.query.name));
-
-        if (!regTest){
+        if (!/^[a-zA-Z0-9_]{3,15}$/.test(String(name))){
             throw new Error("wrong username");
         }
 
-        // console.log(request.query);
+        response.json( {data: await getTwitterUsers(name) });
+        // console.log(getTwitterUsers(name));
+        console.log('used time: ' + (Date.now() - time));
 
-    
-        let raw = await fetch('https://api.twitter.com/2/users/by/username/' + request.query.name + '?user.fields=id,name,description,profile_image_url,url,username',
-        {
-            headers: { 'authorization': 'Bearer ' + bearer },
-        });
-        let json = await raw.json();
+    } catch(err) {
+        // console.log(err);
+        response.json( {res: "request failed. "+err} );
+    }
+});
+app.get('/twitter2/', async (request, response) => {
+    // const letters = 'ABCDEFGHIKLMNOPQRSTVXYZ_1234567890'.toLowerCase();
+    const letters = 'ABCDEFGHIKLMNOPQRSTQRSTVXYZ'.toLowerCase();
+    let time;
+    try {
+        for (let i1 = 0; i1 < letters.length; i1++ ){
+            for (let i2 = 0; i2 < letters.length; i2++ ){
+                time = Date.now();
+                let res = await getTwitterUsers(letters[i1] + letters[i2]);
+                console.log('q =  ' + letters[i1] + letters[i2] +' ;used time: ' + (Date.now() - time));
+            }
+        }
+        response.json({res:'all ok'});
 
-        // console.log(json);
-
-        response.json( json );
     } catch(err) {
         // console.log(err);
         response.json( {res: "request failed. "+err} );
