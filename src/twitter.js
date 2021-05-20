@@ -1,44 +1,44 @@
 const { JsonDB } = require('node-json-db');
+/*
+create file .env at the root of the project and add twitter API data
+TWITTER_API_KEY = 'Bfn...'
+TWITTER_API_SECRET = 'n5k...'
+TWITTER_ACCESS_TOKEN: '138...'
+TWITTER_ACCESS_TOKEN_SECRET: '0cs...'
+ */
+require('dotenv').config();
 const { Config } = require('node-json-db/dist/lib/JsonDBConfig');
+
 
 const {TwitterClient} = require('twitter-api-client');
 
-const dbTimeout = 1000 * 60 * 60 * 12; // 12 hours
+// TODO implement DB cleaning daily
+const dbTimeout = 1000 * 60 * 60 * 12; // save users in DB for 12 hours
 const db = new JsonDB(new Config("myDataBase", true, false, '/'));
-const dbQuery = new JsonDB(new Config("myQueryDataBase", true, false, '/'));
-const dbUsers = new JsonDB(new Config("myUsersDataBase", true, false, '/'));
 
 async function getTwitterUsers(name){
     name = name.toLowerCase();
     try {
         var data = db.getData("/"+name);
-        // console.log(data);
-        // console.log(!!data);
         if (data) {
             if (data.time < (Date.now() - dbTimeout)) {
-                // console.log('cache data expired ... remove');
+                // cache data expired ... remove
                 db.delete("/" + name);
             } else {
-                // console.log('return cached data for: '+name);
-                // console.log(data.json);
-                // response.json( data.json );
+                // return cached data
                 return data.users;
             }
         }
     } catch (e) {
-        // console.log('cant find data in DB');
-        // console.log(e);
+        // console.log('cant find data in DB', e);
     }
 
-
-    // console.log(request.query);
-
     try {
-        let twitterClient = new TwitterClient({
-            apiKey: 'bw3IB3AkhFtVgp6vCNhQVLY1k',
-            apiSecret: 'AGBRs8whTEZiEmCapBNqPpOgnvsNGtwgDDYrlB7sf3Lt105FhH',
-            accessToken: '14190486-tHT8DhDFmpbJSJqPRV6HUQiT2Hu9jhafcpkt07YNz',
-            accessTokenSecret: 'yTFNDOVKebSt8w7H43JXUms8GUxP6YBAisVfcJfX5qhom',
+        const twitterClient = new TwitterClient({
+            apiKey: process.env.TWITTER_API_KEY,
+            apiSecret: process.env.TWITTER_API_SECRET,
+            accessToken: process.env.TWITTER_ACCESS_TOKEN,
+            accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
         })
         const users = (
             await twitterClient.accountsAndUsers.usersSearch({
@@ -55,26 +55,19 @@ async function getTwitterUsers(name){
             };
         });
 
+        // Twitter API 2.0 request for user lookup
         // let raw = await fetch('https://api.twitter.com/2/users/by/username/' + name + '?user.fields=id,name,description,profile_image_url,url,username',
         // {
         //     headers: { 'authorization': 'Bearer ' + bearer },
         // });
         // let json = await raw.json();
 
-        // console.log('save db recored for '+name + ' , used time: ' + (Date.now() - time));
         db.push("/"+name, {time: Date.now(), users});
 
-        // Save the data (useful if you disable the saveOnPush)
-        // db.save();
-
-        // In case you have a exterior change to the databse file and want to reload it
-        // use this method
-        // db.reload();
         return users;
 
     } catch (e){
-        console.log(e);
-        console.log('something wrong with twitter request');
+        console.log('something wrong with twitter request.',e);
         return [];
     }
 

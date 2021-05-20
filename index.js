@@ -251,8 +251,9 @@ app.get('/twitter/', async (request, response) => {
     }
 });
 app.get('/twitter2/', async (request, response) => {
-    // const letters = 'ABCDEFGHIKLMNOPQRSTVXYZ_1234567890'.toLowerCase();
-    const letters = 'ABCDEFGHIKLMNOPQRSTQRSTVXYZ'.toLowerCase();
+    const letters = 'ABCDEFGHIKLMNOPQRSTVXYZ_1234567890'.toLowerCase();
+    // const letters = 'ABCDEFGHIKLMNOPQRSTQRSTVXYZ'.toLowerCase();
+    // const letters = 'AB'.toLowerCase();
     let time;
     try {
         for (let i1 = 0; i1 < letters.length; i1++ ){

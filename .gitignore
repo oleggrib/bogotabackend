@@ -6,3 +6,4 @@ yarn.lock
 myDataBase.json
 
 .vercel
+.env

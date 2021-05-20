@@ -13,6 +13,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "detect-file-type": "^0.2.8",
+    "dotenv": "^9.0.2",
     "ethers": "^5.1.4",
     "express": "^4.17.1",
     "file-type": "^16.4.0",
